@@ -88,7 +88,6 @@ const MonacoEditor: React.FC<EditorProps> = props => {
       editorRef.current!.saveViewState()
       console.log('saved')
     })
-    console.log(editorRef.current.getSupportedActions())
     editorRef.current.layout()
     editorRef.current.focus()
     return () => {

@@ -1,12 +1,11 @@
 import expect from 'expect'
 import { SaferEval } from 'safer-eval'
 
-export const runInSandbox = async (
-  sources: { [props: string]: string },
-  entrypoint: string,
+const runInJSSandbox = (
+  sources: { [name: string]: string },
+  filename: string,
   setStdout: (s: string | ((s: string) => string)) => void
 ) => {
-  setStdout('')
   const consoleInSandbox = (...args: any[]) =>
     setStdout(s => s + args.map(arg => arg.toString()).join(' '))
 
@@ -15,24 +14,49 @@ export const runInSandbox = async (
   let current = ''
 
   const describe = (label: string, cb: Function) => {
+    console.log('describe', label)
     tests[label] = tests[label] || {}
     current = label
     cb()
   }
 
   const test = (label: string, cb: Function) => {
+    console.log('test', current, label)
     tests[current][label] = cb
   }
 
+  const module = { exports: {} }
+  const sandbox = new SaferEval({
+    expect,
+    console: { log: consoleInSandbox, dir: consoleInSandbox },
+    describe,
+    test,
+    it: test,
+    module,
+    require: (s: string) => {
+      const { exports } = runInJSSandbox(sources, s, setStdout)
+      console.log(exports)
+      return exports
+    }
+  })
+  const code = `function(){${sources[filename]}}();`
+  sandbox.runInContext(code)
+  return {
+    exports: module.exports,
+    tests
+  }
+}
+
+export const runJSTest = async (
+  sources: { [props: string]: string },
+  entrypoint: string,
+  setStdout: (s: string | ((s: string) => string)) => void
+) => {
+  setStdout('')
+
   try {
-    const sandbox = new SaferEval({
-      expect,
-      console: { log: consoleInSandbox, dir: consoleInSandbox },
-      describe,
-      test,
-      it: test
-    })
-    sandbox.runInContext(sources[entrypoint])
+    const { tests } = runInJSSandbox(sources, entrypoint, setStdout)
+    console.log(tests)
 
     Object.keys(tests).forEach(testDesc => {
       setStdout(s => s + testDesc + '\n')

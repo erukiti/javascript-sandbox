@@ -1,7 +1,7 @@
 import React from 'react'
 import styled from 'styled-components'
 
-import { runInSandbox } from '../sandbox/javascript'
+import { runJSTest } from '../sandbox/javascript'
 
 const SandboxConsoleDiv = styled.code`
   font-family: monospace;
@@ -15,7 +15,7 @@ const SandboxRunner: React.FC<{
 
   const [stdout, setStdout] = React.useState('')
   const handleRun = React.useCallback(() => {
-    runInSandbox(sources, 'index.test.js', setStdout)
+    runJSTest(sources, 'index.test.js', setStdout)
   }, [sources])
   return (
     <div style={style}>
