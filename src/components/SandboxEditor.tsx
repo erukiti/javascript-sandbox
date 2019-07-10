@@ -43,7 +43,7 @@ monaco.languages.registerDocumentFormattingEditProvider('javascript', {
       singleQuote: true,
       tabWidth: 2
     })
-    console.log('format', text)
+    console.log('format')
 
     return [
       {
@@ -84,11 +84,11 @@ const MonacoEditor: React.FC<EditorProps> = props => {
       wordWrap: 'on'
     })
     editorRef.current.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S, () => {
-      // editorRef.current!.getAction('actions.format').run()
-      // FIXME: フォーマットするアクションがわからねえええええ
+      editorRef.current!.getAction('editor.action.formatDocument').run()
       editorRef.current!.saveViewState()
       console.log('saved')
     })
+    console.log(editorRef.current.getSupportedActions())
     editorRef.current.layout()
     editorRef.current.focus()
     return () => {
@@ -127,11 +127,13 @@ const MonacoEditor: React.FC<EditorProps> = props => {
   }, [sources, filename])
 
   useEffect(() => {
+    console.log('subscription', filename)
     subscriptionRef.current = modelsRef.current[filename].onDidChangeContent(ev => {
       onChange(modelsRef.current[filename].getValue())
     })
     return () => {
       if (subscriptionRef.current) {
+        console.log('subscription dispose')
         subscriptionRef.current.dispose()
         subscriptionRef.current = null
       }

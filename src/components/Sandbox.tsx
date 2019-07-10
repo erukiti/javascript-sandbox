@@ -28,7 +28,7 @@ type Context = SandboxState & { dispatch: React.Dispatch<any> | null }
 export const SandboxContext = React.createContext<Context>({ ...sandboxInit, dispatch: null })
 
 const reducer: React.Reducer<SandboxState, any> = (state: SandboxState, act: any) => {
-  console.log(act)
+  console.log('action', act)
   switch (act.type) {
     case 'EDIT_SOURCE': {
       const sources = { ...state.sources, [state.filename]: act.source }
@@ -53,7 +53,6 @@ const Sandbox: React.FC = () => {
   const editSource = React.useCallback((source: string) => {
     dispatch({ type: 'EDIT_SOURCE', source })
   }, [])
-  console.log(state)
   return (
     <SandboxContext.Provider value={{ ...state, dispatch }}>
       <SandboxDiv>
