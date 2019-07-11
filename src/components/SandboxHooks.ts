@@ -50,6 +50,20 @@ monaco.languages.registerDocumentFormattingEditProvider('javascript', {
   }
 })
 
+const languageByExtensions: { [props: string]: string } = {
+  js: 'javascript',
+  jsx: 'javascript',
+  ts: 'typescript',
+  tsx: 'typescript',
+  md: 'markdown'
+}
+
+const getLanguage = (filename: string) => {
+  const ext = filename.split('.').pop() || ''
+  console.log(ext)
+  return languageByExtensions[ext] || 'text'
+}
+
 export const useSandbox = (initialSources: { [p: string]: string }) => {
   console.log('useSandbox')
 
@@ -90,9 +104,9 @@ export const useSandbox = (initialSources: { [p: string]: string }) => {
       },
       fontSize: 16,
       lineNumbers: 'on',
-      wordWrap: 'on'
+      wordWrap: 'on',
+      automaticLayout: true
     })
-    editorRef.current.layout()
     editorRef.current.focus()
     console.log(1)
     return () => {
@@ -123,7 +137,7 @@ export const useSandbox = (initialSources: { [p: string]: string }) => {
           model.pushEditOperations([], [{ range: model.getFullModelRange(), text }], () => null)
         }
       } else {
-        const model = monaco.editor.createModel(text, 'javascript')
+        const model = monaco.editor.createModel(text, getLanguage(name))
         model.updateOptions({
           tabSize: 2
         })
@@ -162,5 +176,22 @@ export const useSandbox = (initialSources: { [p: string]: string }) => {
     },
     [filename]
   )
-  return { run, stdout, editorDiv, sources, selectFilename }
+
+  const newFile = React.useCallback(
+    (s: string) => {
+      const model = monaco.editor.createModel('', getLanguage(s))
+      model.updateOptions({
+        tabSize: 2
+      })
+      modelsRef.current[s] = model
+      setSources(x => {
+        x[s] = x[s] || ''
+        return x
+      })
+      selectFilename(s)
+    },
+    [selectFilename]
+  )
+
+  return { run, stdout, editorDiv, sources, selectFilename, newFile, filename }
 }

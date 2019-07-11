@@ -7,7 +7,8 @@ Cyber Dojo みたいなやつ
 * 複数ファイル（現状だと1ファイルのみ）
   - [x] require / module.exports 対応
   - [x] ファイル名選択
-  - [ ] 新規ファイル作成
+  - [x] 新規ファイル作成
+  - [x] ファイルリストで、現在編集中のファイルに印をつける
 * [x] CMD/CTRL + S で prettier で format する
 * [x] CMD/CTRL + S で test runできるようにする
 * [ ] 複数端末間同期（CRDTなど）
