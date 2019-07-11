@@ -6,6 +6,7 @@ const runInJSSandbox = (
   filename: string,
   setStdout: (s: string | ((s: string) => string)) => void
 ) => {
+  console.log('run JS', filename)
   const consoleInSandbox = (...args: any[]) =>
     setStdout(s => s + args.map(arg => arg.toString()).join(' '))
 
@@ -35,7 +36,7 @@ const runInJSSandbox = (
     module,
     require: (s: string) => {
       const { exports } = runInJSSandbox(sources, s, setStdout)
-      console.log(exports)
+      console.log('exports', s, exports)
       return exports
     }
   })
@@ -56,7 +57,7 @@ export const runJSTest = async (
 
   try {
     const { tests } = runInJSSandbox(sources, entrypoint, setStdout)
-    console.log(tests)
+    console.dir('test results', tests)
 
     Object.keys(tests).forEach(testDesc => {
       setStdout(s => s + testDesc + '\n')

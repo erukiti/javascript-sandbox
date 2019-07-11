@@ -51,6 +51,8 @@ monaco.languages.registerDocumentFormattingEditProvider('javascript', {
 })
 
 export const useSandbox = (initialSources: { [p: string]: string }) => {
+  console.log('useSandbox')
+
   const editorDiv = React.useRef<HTMLDivElement>(null)
 
   const [filename, setFilename] = React.useState('index.test.js')
@@ -60,12 +62,14 @@ export const useSandbox = (initialSources: { [p: string]: string }) => {
   const subscriptionRef = useRef<monaco.IDisposable[]>([])
   const modelsRef = useRef<{ [name: string]: monaco.editor.ITextModel }>({})
 
-  const run = React.useCallback((name: string = 'index.test.js') => {
-    setStdout('')
-    runJSTest(sources, name, setStdout)
-  }, [])
-
-  console.log('useSandbox', editorDiv, editorRef)
+  const run = React.useCallback(
+    (name: string = 'index.test.js') => {
+      console.log('run')
+      setStdout('')
+      runJSTest(sources, name, setStdout)
+    },
+    [sources, setStdout]
+  )
 
   const unsubscription = () => {
     subscriptionRef.current.forEach(subscription => {
@@ -87,12 +91,6 @@ export const useSandbox = (initialSources: { [p: string]: string }) => {
       lineNumbers: 'on',
       wordWrap: 'on'
     })
-    editorRef.current.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S, () => {
-      editorRef.current!.getAction('editor.action.formatDocument').run()
-      editorRef.current!.saveViewState()
-      console.log('saved')
-      run('index.test.js')
-    })
     editorRef.current.layout()
     editorRef.current.focus()
     console.log(1)
@@ -105,6 +103,15 @@ export const useSandbox = (initialSources: { [p: string]: string }) => {
       unsubscription()
     }
   }, [])
+
+  useEffect(() => {
+    editorRef.current!.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S, () => {
+      editorRef.current!.getAction('editor.action.formatDocument').run()
+      editorRef.current!.saveViewState()
+      console.log('saved')
+      run('index.test.js')
+    })
+  }, [run])
 
   useEffect(() => {
     console.log('create models')

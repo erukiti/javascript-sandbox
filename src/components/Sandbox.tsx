@@ -42,22 +42,19 @@ const Sandbox: React.FC = () => {
     size: sources[name].length
   }))
 
-  const sourceList2 = React.useMemo(() => {
-    console.log('createMemo')
-    return sourceList.map(({ name, size }) => (
-      <div onClick={() => setFilename(name)} key={name}>
-        {name}: {size} bytes
-      </div>
-    ))
-  }, [sourceList, setFilename])
-
   console.log('sources', sources)
   return (
     <SandboxDiv>
       <EditorDiv style={{ gridColumn: '1/2' }} ref={editorDiv} />
       <div style={{ gridColumn: '2/2' }}>
         <button onClick={() => run()}>RUN</button>
-        <div>{sourceList2}</div>
+        <div>
+          {sourceList.map(({ name, size }: any) => (
+            <div onClick={() => setFilename(name)} key={name}>
+              {name}: {size} bytes
+            </div>
+          ))}
+        </div>
         <code>
           <pre>{stdout}</pre>
         </code>
