@@ -61,6 +61,7 @@ export const useSandbox = (initialSources: { [p: string]: string }) => {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor>()
   const subscriptionRef = useRef<monaco.IDisposable[]>([])
   const modelsRef = useRef<{ [name: string]: monaco.editor.ITextModel }>({})
+  const editorStatesRef = useRef<{ [name: string]: monaco.editor.ICodeEditorViewState }>({})
 
   const run = React.useCallback(
     (name: string = 'index.test.js') => {
@@ -107,8 +108,6 @@ export const useSandbox = (initialSources: { [p: string]: string }) => {
   useEffect(() => {
     editorRef.current!.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S, () => {
       editorRef.current!.getAction('editor.action.formatDocument').run()
-      editorRef.current!.saveViewState()
-      console.log('saved')
       run('index.test.js')
     })
   }, [run])
@@ -138,12 +137,15 @@ export const useSandbox = (initialSources: { [p: string]: string }) => {
   useEffect(() => {
     console.log('setModel', filename)
     editorRef.current!.setModel(modelsRef.current[filename])
+    editorRef.current!.restoreViewState(editorStatesRef.current[filename])
+    editorRef.current!.focus()
   }, [filename])
 
   useEffect(() => {
     console.log('subscription', filename)
     subscriptionRef.current.push(
       modelsRef.current[filename].onDidChangeContent(ev => {
+        editorStatesRef.current[filename] = editorRef.current!.saveViewState()!
         setSources(x => ({ ...x, [filename]: modelsRef.current[filename].getValue() }))
         // onChange
       })
