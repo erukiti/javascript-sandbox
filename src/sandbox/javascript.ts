@@ -2,7 +2,7 @@ import expect from 'expect'
 import { SaferEval } from 'safer-eval'
 
 const runInJSSandbox = (
-  sources: { [name: string]: string },
+  getSource: (name: string) => string,
   filename: string,
   setStdout: (s: string | ((s: string) => string)) => void
 ) => {
@@ -34,12 +34,12 @@ const runInJSSandbox = (
     it: test,
     module,
     require: (s: string) => {
-      const { exports } = runInJSSandbox(sources, s, setStdout)
+      const { exports } = runInJSSandbox(getSource, s, setStdout)
       console.log(exports)
       return exports
     }
   })
-  const code = `function(){${sources[filename]}}();`
+  const code = `function(){${getSource(filename)}}();`
   sandbox.runInContext(code)
   return {
     exports: module.exports,
@@ -48,14 +48,14 @@ const runInJSSandbox = (
 }
 
 export const runJSTest = async (
-  sources: { [props: string]: string },
+  getSource: (name: string) => string,
   entrypoint: string,
   setStdout: (s: string | ((s: string) => string)) => void
 ) => {
   setStdout('')
 
   try {
-    const { tests } = runInJSSandbox(sources, entrypoint, setStdout)
+    const { tests } = runInJSSandbox(getSource, entrypoint, setStdout)
     console.log(tests)
 
     Object.keys(tests).forEach(testDesc => {

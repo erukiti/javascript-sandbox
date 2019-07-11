@@ -1,20 +1,10 @@
 import React from 'react'
 import styled from 'styled-components'
 
-import SandboxEditor from './SandboxEditor'
-import SandboxRunner from './SandboxRunner'
+import { useSandbox } from './SandboxHooks'
 
-interface SandboxState {
-  sources: {
-    [props: string]: string
-  }
-  filename: string
-  stdout: string
-}
-
-const sandboxInit: SandboxState = {
-  sources: {
-    'index.test.js': `const { truth } = require('index.js')
+const initialSources: { [p: string]: string } = {
+  'index.test.js': `const { truth } = require('index.js')
 
 describe('truth', () => {
   test('All number is 42', () => {
@@ -22,7 +12,7 @@ describe('truth', () => {
   })
 })
 `,
-    'index.js': `function truth() {
+  'index.js': `function truth() {
   return 8 * 6;
 }
 
@@ -30,31 +20,12 @@ module.exports = {
   truth
 }
 `
-  },
-  filename: 'index.test.js',
-  stdout: ''
 }
 
-type Context = SandboxState & { dispatch: React.Dispatch<any> | null }
-
-export const SandboxContext = React.createContext<Context>({ ...sandboxInit, dispatch: null })
-
-const reducer: React.Reducer<SandboxState, any> = (state: SandboxState, act: any) => {
-  console.log('action', act)
-  switch (act.type) {
-    case 'EDIT_SOURCE': {
-      const sources = { ...state.sources, [state.filename]: act.source }
-      return { ...state, sources }
-    }
-    case 'EDIT_STDOUT': {
-      return { ...state, stdout: act.stdout }
-    }
-    case 'CHANGE_TARGET': {
-      return { ...state, filename: act.filename }
-    }
-  }
-  return state
-}
+const EditorDiv = styled.div`
+  width: 50vw;
+  height: 100vh;
+`
 
 const SandboxDiv = styled.div`
   width: 100vw;
@@ -64,22 +35,36 @@ const SandboxDiv = styled.div`
 `
 
 const Sandbox: React.FC = () => {
-  const [state, dispatch] = React.useReducer(reducer, sandboxInit)
-  const editSource = React.useCallback((source: string) => {
-    dispatch({ type: 'EDIT_SOURCE', source })
-  }, [])
+  const { run, stdout, editorDiv, getSource, getSourceNames, setFilename } = useSandbox(
+    initialSources
+  )
+
+  const sourceList = getSourceNames().map(name => ({
+    name,
+    size: getSource(name).length
+  }))
+
+  const sourceList2 = React.useMemo(() => {
+    console.log('createMemo')
+    return sourceList.map(({ name, size }) => (
+      <div onClick={() => setFilename(name)}>
+        {name}: {size} bytes
+      </div>
+    ))
+  }, [sourceList])
+
+  console.log('sources', getSourceNames())
   return (
-    <SandboxContext.Provider value={{ ...state, dispatch }}>
-      <SandboxDiv>
-        <SandboxEditor
-          style={{ gridColumn: '1/2' }}
-          sources={state.sources}
-          filename={state.filename}
-          onChange={editSource}
-        />
-        <SandboxRunner style={{ gridColumn: '2/2' }} sources={state.sources} />
-      </SandboxDiv>
-    </SandboxContext.Provider>
+    <SandboxDiv>
+      <EditorDiv style={{ gridColumn: '1/2' }} ref={editorDiv} />
+      <div style={{ gridColumn: '2/2' }}>
+        <button onClick={() => run()}>RUN</button>
+        <div>{sourceList2}</div>
+        <code>
+          <pre>{stdout}</pre>
+        </code>
+      </div>
+    </SandboxDiv>
   )
 }
 
