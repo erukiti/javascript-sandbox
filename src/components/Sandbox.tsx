@@ -35,25 +35,23 @@ const SandboxDiv = styled.div`
 `
 
 const Sandbox: React.FC = () => {
-  const { run, stdout, editorDiv, getSource, getSourceNames, setFilename } = useSandbox(
-    initialSources
-  )
+  const { run, stdout, editorDiv, sources, setFilename } = useSandbox(initialSources)
 
-  const sourceList = getSourceNames().map(name => ({
+  const sourceList = Object.keys(sources).map(name => ({
     name,
-    size: getSource(name).length
+    size: sources[name].length
   }))
 
   const sourceList2 = React.useMemo(() => {
     console.log('createMemo')
     return sourceList.map(({ name, size }) => (
-      <div onClick={() => setFilename(name)}>
+      <div onClick={() => setFilename(name)} key={name}>
         {name}: {size} bytes
       </div>
     ))
-  }, [sourceList])
+  }, [sourceList, setFilename])
 
-  console.log('sources', getSourceNames())
+  console.log('sources', sources)
   return (
     <SandboxDiv>
       <EditorDiv style={{ gridColumn: '1/2' }} ref={editorDiv} />

@@ -55,20 +55,14 @@ export const useSandbox = (initialSources: { [p: string]: string }) => {
 
   const [filename, setFilename] = React.useState('index.test.js')
   const [stdout, setStdout] = React.useState('')
+  const [sources, setSources] = React.useState<{ [name: string]: string }>({})
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor>()
   const subscriptionRef = useRef<monaco.IDisposable[]>([])
   const modelsRef = useRef<{ [name: string]: monaco.editor.ITextModel }>({})
 
-  const getSource = (name: string): string => {
-    return modelsRef.current[name].getValue()
-  }
-  const getSourceNames = (): string[] => {
-    return Object.keys(modelsRef.current)
-  }
-
   const run = React.useCallback((name: string = 'index.test.js') => {
     setStdout('')
-    runJSTest(getSource, name, setStdout)
+    runJSTest(sources, name, setStdout)
   }, [])
 
   console.log('useSandbox', editorDiv, editorRef)
@@ -114,6 +108,7 @@ export const useSandbox = (initialSources: { [p: string]: string }) => {
 
   useEffect(() => {
     console.log('create models')
+    const newSources: { [name: string]: string } = {}
     Object.keys(initialSources).forEach(name => {
       const text = initialSources[name]
       if (name in modelsRef.current) {
@@ -128,7 +123,9 @@ export const useSandbox = (initialSources: { [p: string]: string }) => {
         })
         modelsRef.current[name] = model
       }
+      newSources[name] = modelsRef.current[name].getValue()
     })
+    setSources(newSources)
   }, [initialSources])
 
   useEffect(() => {
@@ -136,17 +133,18 @@ export const useSandbox = (initialSources: { [p: string]: string }) => {
     editorRef.current!.setModel(modelsRef.current[filename])
   }, [filename])
 
-  // useEffect(() => {
-  //   console.log('subscription', filename)
-  //   subscriptionRef.current.push(
-  //     modelsRef.current[filename].onDidChangeContent(ev => {
-  //       // onChange
-  //     })
-  //   )
-  //   return () => {
-  //     unsubscription()
-  //   }
-  // }, [filename])
+  useEffect(() => {
+    console.log('subscription', filename)
+    subscriptionRef.current.push(
+      modelsRef.current[filename].onDidChangeContent(ev => {
+        setSources(x => ({ ...x, [filename]: modelsRef.current[filename].getValue() }))
+        // onChange
+      })
+    )
+    return () => {
+      unsubscription()
+    }
+  }, [filename])
 
-  return { run, stdout, editorDiv, getSource, getSourceNames, setFilename }
+  return { run, stdout, editorDiv, sources, setFilename }
 }
