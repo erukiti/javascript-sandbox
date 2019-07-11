@@ -155,5 +155,12 @@ export const useSandbox = (initialSources: { [p: string]: string }) => {
     }
   }, [filename])
 
-  return { run, stdout, editorDiv, sources, setFilename }
+  const selectFilename = React.useCallback(
+    (s: string) => {
+      editorStatesRef.current[filename] = editorRef.current!.saveViewState()!
+      setFilename(s)
+    },
+    [filename]
+  )
+  return { run, stdout, editorDiv, sources, selectFilename }
 }

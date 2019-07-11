@@ -35,7 +35,7 @@ const SandboxDiv = styled.div`
 `
 
 const Sandbox: React.FC = () => {
-  const { run, stdout, editorDiv, sources, setFilename } = useSandbox(initialSources)
+  const { run, stdout, editorDiv, sources, selectFilename } = useSandbox(initialSources)
 
   const sourceList = Object.keys(sources).map(name => ({
     name,
@@ -50,7 +50,7 @@ const Sandbox: React.FC = () => {
         <button onClick={() => run()}>RUN</button>
         <div>
           {sourceList.map(({ name, size }: any) => (
-            <div onClick={() => setFilename(name)} key={name}>
+            <div onClick={() => selectFilename(name)} key={name}>
               {name}: {size} bytes
             </div>
           ))}
